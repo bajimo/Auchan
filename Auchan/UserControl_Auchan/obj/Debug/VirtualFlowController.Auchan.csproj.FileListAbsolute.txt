@@ -1,0 +1,11 @@
+D:\VirtualFlowController\VirtualFlowController\bin\Debug\VirtualFlowController.Core.Auchan.dll
+D:\VirtualFlowController\VirtualFlowController\bin\Debug\VirtualFlowController.Core.Auchan.pdb
+D:\Git\Auchan\UserControl_Auchan\obj\Debug\VirtualFlowController.Auchan.csprojResolveAssemblyReference.cache
+D:\Git\Auchan\UserControl_Auchan\obj\Debug\AuchanUserControl.baml
+D:\Git\Auchan\UserControl_Auchan\obj\Debug\AuchanUserControl.g.cs
+D:\Git\Auchan\UserControl_Auchan\obj\Debug\VirtualFlowController.Core.Auchan_MarkupCompile.cache
+D:\Git\Auchan\UserControl_Auchan\obj\Debug\VirtualFlowController.Core.Auchan.g.resources
+D:\Git\Auchan\UserControl_Auchan\obj\Debug\VirtualFlowController.Core.Auchan.dll
+D:\Git\Auchan\UserControl_Auchan\obj\Debug\VirtualFlowController.Core.Auchan.pdb
+D:\Git\VirtualFlowController\VirtualFlowController\bin\Debug\VirtualFlowController.Core.Auchan.dll
+D:\Git\VirtualFlowController\VirtualFlowController\bin\Debug\VirtualFlowController.Core.Auchan.pdb

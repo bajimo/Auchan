@@ -1,0 +1,5 @@
+C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.DatcomUK.Controllers.dll
+C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.DatcomUK.Controllers.pdb
+D:\Git\DematicExperior\Experior.Catalog.Dematic.DatcomUK\obj\Release\Experior.Catalog.Dematic.DatcomUK.csprojResolveAssemblyReference.cache
+D:\Git\DematicExperior\Experior.Catalog.Dematic.DatcomUK\obj\Release\Experior.Catalog.Dematic.DatcomUK.Controllers.dll
+D:\Git\DematicExperior\Experior.Catalog.Dematic.DatcomUK\obj\Release\Experior.Catalog.Dematic.DatcomUK.Controllers.pdb

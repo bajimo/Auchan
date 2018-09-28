@@ -1,0 +1,3 @@
+C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.DCI.Controllers.dll
+D:\Git\DematicExperior\Experior.Catalog.Dematic.DCI\obj\Release\Experior.Catalog.Dematic.DCI.csprojResolveAssemblyReference.cache
+D:\Git\DematicExperior\Experior.Catalog.Dematic.DCI\obj\Release\Experior.Catalog.Dematic.DCI.Controllers.dll

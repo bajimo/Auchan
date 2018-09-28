@@ -1,0 +1,9 @@
+C:\Xcelgo\Xcelgo Experior 6\Experior.Plugin.BK.dll
+C:\Xcelgo\Xcelgo Experior 6\Experior.Plugin.BK.pdb
+C:\Xcelgo\Xcelgo Experior\Experior.Plugin.BK.dll
+C:\Xcelgo\Xcelgo Experior\Experior.Plugin.BK.pdb
+D:\Git\DematicExperior\BK\obj\Debug\BK.csprojResolveAssemblyReference.cache
+D:\Git\DematicExperior\BK\obj\Debug\Experior.Plugin.Properties.Resources.resources
+D:\Git\DematicExperior\BK\obj\Debug\BK.csproj.GenerateResource.Cache
+D:\Git\DematicExperior\BK\obj\Debug\Experior.Plugin.BK.dll
+D:\Git\DematicExperior\BK\obj\Debug\Experior.Plugin.BK.pdb
