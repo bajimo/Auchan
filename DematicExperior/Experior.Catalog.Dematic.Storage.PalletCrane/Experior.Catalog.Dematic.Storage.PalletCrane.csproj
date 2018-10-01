@@ -166,6 +166,7 @@
     <ProjectReference Include="..\Experior.Catalog.Dematic.Pallet\Experior.Catalog.Dematic.Pallet.csproj">
       <Project>{2b18812e-a543-4369-a1b4-31a36336661e}</Project>
       <Name>Experior.Catalog.Dematic.Pallet</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\Experior.Catalog.DematicExtra\Experior.Catalog.DematicExtra.csproj">
       <Project>{f83d8e6d-2f36-4153-8b43-c65f94b80b0f}</Project>

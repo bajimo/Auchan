@@ -47,9 +47,8 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Dematic.ATC, Version=1.0.0.20031, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Xcelgo\Xcelgo Experior\Dematic.ATC.dll</HintPath>
+    <Reference Include="Dematic.ATC">
+      <HintPath>..\..\VFC\Dematic.ATC.dll</HintPath>
     </Reference>
     <Reference Include="Experior.Catalog.Logistic.Basic, Version=5.3.29138.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -71,10 +70,13 @@
       <HintPath>C:\Xcelgo\Xcelgo Experior\Experior.Core.DLL</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.DirectX, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="Microsoft.DirectX, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.DirectX.Direct3D, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\bin\Debug\Microsoft.DirectX.Direct3D.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -172,6 +174,7 @@
     <ProjectReference Include="..\Experior.Catalog.Dematic.Storage.MultiShuttle\Branched - DriveThrough\Experior.Catalog.Dematic.Storage.MultiShuttle.csproj">
       <Project>{66cd6d1d-2ae7-43dc-88e7-3f1505a40f44}</Project>
       <Name>Experior.Catalog.Dematic.Storage.MultiShuttle</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\Experior.Catalog.Dematic.Storage.MultiShuttle\Branched - DriveThrough\Experior.Catalog.Dematic.Storage.MultiShuttle.csproj">
       <Project>{66cd6d1d-2ae7-43dc-88e7-3f1505a40f44}</Project>
@@ -191,6 +194,7 @@
     <ProjectReference Include="..\Experior.Catalog.DematicExtra\Experior.Catalog.DematicExtra.csproj">
       <Project>{f83d8e6d-2f36-4153-8b43-c65f94b80b0f}</Project>
       <Name>Experior.Catalog.DematicExtra</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\Experior.Dematic.Base\Experior.Dematic.Base.csproj">
       <Project>{803cb223-5a12-4190-9cdd-e34a34a6f471}</Project>
