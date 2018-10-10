@@ -1,7 +1,0 @@
-C:\Xcelgo\Xcelgo Experior 6\Experior.Catalog.Dematic.Custom.dll
-C:\Xcelgo\Xcelgo Experior 6\Experior.Catalog.Dematic.Custom.pdb
-C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.Custom.dll
-C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.Custom.pdb
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Custom\obj\Debug\Experior.Catalog.Dematic.Custom.csprojResolveAssemblyReference.cache
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Custom\obj\Debug\Experior.Catalog.Dematic.Custom.dll
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Custom\obj\Debug\Experior.Catalog.Dematic.Custom.pdb

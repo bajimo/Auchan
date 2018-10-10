@@ -1,5 +1,0 @@
-D:\Git\Auchan\Experior.Controller.AuchanCarvin.Test\bin\Debug\Experior.Controller.AuchanCarvin.Test.dll
-D:\Git\Auchan\Experior.Controller.AuchanCarvin.Test\bin\Debug\Experior.Controller.AuchanCarvin.Test.pdb
-D:\Git\Auchan\Experior.Controller.AuchanCarvin.Test\bin\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
-D:\Git\Auchan\Experior.Controller.AuchanCarvin.Test\obj\Debug\Experior.Controller.AuchanCarvin.Test.dll
-D:\Git\Auchan\Experior.Controller.AuchanCarvin.Test\obj\Debug\Experior.Controller.AuchanCarvin.Test.pdb

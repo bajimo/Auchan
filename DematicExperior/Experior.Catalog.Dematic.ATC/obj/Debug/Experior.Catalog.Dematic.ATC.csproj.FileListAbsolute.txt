@@ -1,9 +1,0 @@
-C:\Xcelgo\Xcelgo Experior 6\Experior.Catalog.Dematic.ATC.Controllers.dll
-C:\Xcelgo\Xcelgo Experior 6\Experior.Catalog.Dematic.ATC.Controllers.pdb
-C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.ATC.Controllers.dll
-C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.ATC.Controllers.pdb
-D:\Git\DematicExperior\Experior.Catalog.Dematic.ATC\obj\Debug\Experior.Catalog.Dematic.ATC.csprojResolveAssemblyReference.cache
-D:\Git\DematicExperior\Experior.Catalog.Dematic.ATC\obj\Debug\Experior.Catalog.Dematic.ATC.ProjectFieldTools.resources
-D:\Git\DematicExperior\Experior.Catalog.Dematic.ATC\obj\Debug\Experior.Catalog.Dematic.ATC.csproj.GenerateResource.Cache
-D:\Git\DematicExperior\Experior.Catalog.Dematic.ATC\obj\Debug\Experior.Catalog.Dematic.ATC.Controllers.dll
-D:\Git\DematicExperior\Experior.Catalog.Dematic.ATC\obj\Debug\Experior.Catalog.Dematic.ATC.Controllers.pdb

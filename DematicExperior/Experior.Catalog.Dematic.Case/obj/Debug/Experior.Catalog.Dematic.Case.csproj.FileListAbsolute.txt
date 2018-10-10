@@ -1,9 +1,0 @@
-C:\Xcelgo\Xcelgo Experior 6\Experior.Catalog.Dematic.Case.Conveyors.dll
-C:\Xcelgo\Xcelgo Experior 6\Experior.Catalog.Dematic.Case.Conveyors.pdb
-C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.Case.Conveyors.dll
-C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.Case.Conveyors.pdb
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Case\obj\Debug\Experior.Catalog.Dematic.Case.csprojResolveAssemblyReference.cache
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Case\obj\Debug\Experior.Catalog.Properties.Resources.resources
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Case\obj\Debug\Experior.Catalog.Dematic.Case.csproj.GenerateResource.Cache
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Case\obj\Debug\Experior.Catalog.Dematic.Case.Conveyors.dll
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Case\obj\Debug\Experior.Catalog.Dematic.Case.Conveyors.pdb
