@@ -1504,6 +1504,12 @@ namespace Experior.Controller.AuchanCarvin
 
         public void ManualPush(string PusherName)
         {
+            if (Core.Environment.InvokeRequired)
+            {
+                Core.Environment.Invoke(() => ManualPush(PusherName));
+                return;
+            }
+
             //This is to perform a manual push for loads in the pusher
             if (!Push(Core.Assemblies.Assembly.Items[PusherName] as StraightConveyor))
             {
