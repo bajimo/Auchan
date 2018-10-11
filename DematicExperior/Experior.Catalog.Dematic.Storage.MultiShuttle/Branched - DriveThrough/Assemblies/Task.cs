@@ -18,6 +18,12 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
     {
         public Elevator Elevator { get; set; }
 
+        public void CancelLoadA()
+        {
+            loadA_ID = "";
+            numberOfLoadsInTask--;
+        }
+
         public string LoadA_ID 
         { 
             get { return loadA_ID;}

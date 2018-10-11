@@ -234,7 +234,9 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                     {
                         //ElevatorTask lowestTask = oTasks.OrderBy(x => x.DropIndexLoadB).FirstOrDefault(x => x.DropIndexLoadB != 0); //Exclude unsequenced loads
                         var sTasks = OrderTasks(oTasks); //Does a special sort to allow for wrap around of the Drop Index
-                        ElevatorTask lowestTask = sTasks.FirstOrDefault(x => x.DropIndexLoadB != 0); //Exclude unsequenced loads
+                        //MRP 11-10-2018. Only start a task where the front load is ready and ID match
+                        //ElevatorTask lowestTask = sTasks.FirstOrDefault(x => x.DropIndexLoadB != 0); //Exclude unsequenced loads
+                        ElevatorTask lowestTask = sTasks.FirstOrDefault(x => x.DropIndexLoadB != 0 && ((RackConveyor)x.SourceLoadBConv).LocationB.Active && ((RackConveyor)x.SourceLoadBConv).LocationB.ActiveLoad.Identification == x.LoadB_ID); //Exclude unsequenced loads
                         ElevatorTask blockingTask = null;
                         if (lowestTask != null)
                         {
@@ -319,6 +321,7 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                         }
 
                         //Set the current task and start the elevator moving
+
                         CurrentTask = lowestTask;
                     }
 
@@ -481,7 +484,9 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
 
             if (Math.Abs(Vehicle.DestAP.Distance - MovePosition) < 0.001)
             {
-                ElevatorOnArrived(null, null);
+                //MRP 11-10-2018. Maybe it is better to invoke the arrived event. (Maybe some other code needs to be done first)
+                Vehicle.DestAP.Distance = MovePosition;
+                Core.Environment.Invoke(() => ElevatorOnArrived(null, null));
                 return;
             }
 
@@ -585,6 +590,40 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                     }
                     else
                     {
+                        //MRP Auchan 11-10-2018. Cancel task if front load ID does not match task ID.
+                        //Maybe this is not needed because I also changed how tasks are started. (Only start sequenced task if the load id match - unsequenced already did this).
+                        if (rc.LocationB.Active)
+                        {
+                            //Check if we have the right ID.
+                            if (!CurrentTask.RelevantElevatorTask(rc.LocationB.ActiveLoad))
+                            {
+                                Log.Write(string.Format($"Load at front rack conveyor is not relevant for this task! ({rc.LocationB.ActiveLoad.Identification}) Aisle {ParentMultiShuttle.Name} Elevator {ElevatorName}. Elevator task - {CurrentTask}."));
+
+                                if (CurrentTask.LoadCycle == Cycle.Single && CurrentTask.UnloadCycle == Cycle.Single &&
+                                    CurrentTask.NumberOfLoadsInTask == 1)
+                                {
+                                    //it should be ok to just cancel the task
+                                    Log.Write($"Task cancelled! (task: {CurrentTask})");
+                                    CurrentTask = null;
+                                    SetNewElevatorTask();
+                                    return;
+                                }
+
+                                if (CurrentTask.LoadCycle == Cycle.Single && CurrentTask.UnloadCycle == Cycle.Double &&
+                                    CurrentTask.NumberOfLoadsInTask == 2)
+                                {
+                                    //We have another load on the elevator which needs to be unloaded.
+                                    Log.Write($"Task modified! (task: {CurrentTask})");
+                                    CurrentTask.UnloadCycle = Cycle.Single;
+                                    CurrentTask.CancelLoadA();
+                                    MoveElevator(CurrentTask.DestinationLoadBConv);
+                                    return;
+                                }
+
+                                Log.Write($"Could not cancel or modify task. Elevator will probably fail. (task: {CurrentTask})");
+                            }
+                        }
+
                         rc.LocationB.Release();
 
                         if (CurrentTask.LoadCycle == Cycle.Double) // If its a double also release A as well
