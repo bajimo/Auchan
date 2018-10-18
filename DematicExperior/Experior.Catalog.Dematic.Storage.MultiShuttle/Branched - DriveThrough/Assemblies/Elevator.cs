@@ -327,8 +327,12 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
 
                     else //When the drop station is not available then try to find one on the infeed station
                     {
-                        //look for inbound tasks
-                        var iTasks = ElevatorTasks.Where(task => task.Flow == TaskType.Infeed || task.Flow == TaskType.HouseKeep); //TODO: For house keeping moves this needs to be updated to check that the rack in conveyor is available ideally
+                        //look for inbound tasks and check destination is available
+                        var iTasks = ElevatorTasks.Where(task => (task.Flow == TaskType.Infeed || task.Flow == TaskType.HouseKeep) &&
+                                                                 (task.DestinationLoadAConv != null && task.DestinationLoadAConv == task.DestinationLoadBConv && task.DestinationLoadAConv.TransportSection.Route.Loads.Count == 0) ||  //Unload 2 at same level
+                                                                 (task.DestinationLoadAConv != task.DestinationLoadBConv && //Unload at different levels
+                                                                 (task.DestinationLoadAConv == null || task.DestinationLoadAConv.TransportSection.Route.Loads.Count <= 1) && 
+                                                                 (task.DestinationLoadBConv == null || task.DestinationLoadBConv.TransportSection.Route.Loads.Count <= 1))); 
                         if (iTasks.Any())
                         {
                             while (CurrentTask == null)

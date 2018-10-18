@@ -52,6 +52,11 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
         /// </summary>
         private void Vehicle_OnLoadArrived(object sender, ApEnterEventArgs e)
         {
+            foreach (var elevator in ParentMS.elevators)
+            {
+                elevator.SetNewElevatorTask();
+            }
+
             e._load.Stop();
             if (!CurrentTask.Source.IsRackBinLocation()) //If there was a load at the infeed rack conveyor behind the load that has just arrived onto shuttle release this load so that it arrived at B
             {
