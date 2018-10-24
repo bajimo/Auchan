@@ -81,7 +81,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                 else
                 {
                     SendTelegram((string)LoadPosB.UserData, true);
-                    SendTelegram((string)LoadPosA.UserData, true); //position A load 
+                    //MRP 24-10-2018. Wait until transport telegram is received for load B. SendTelegram((string)LoadPosA.UserData, true); //position A load 
                 }
             }
             else
@@ -290,6 +290,9 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                                 UpDateLoadParameters(telegramFields, caseB);
                                 caseB.Destination = telegramFields.GetFieldValue(TelegramFields.destination);
                                 caseB.Source = telegramFields.GetFieldValue(TelegramFields.source);
+                                //MRP 24-10-2018 send load arrived for load A when we got transport telegram for load B
+                                string bodyA = (string)(caseA.UserData);
+                                SendTelegram(bodyA, true); //position A load 
                                 return;
                             }
                             else if (caseA.TUIdent == telegramFields.GetFieldValue(TelegramFields.tuIdent)) //LocationA Should be the second message so create the elevator task

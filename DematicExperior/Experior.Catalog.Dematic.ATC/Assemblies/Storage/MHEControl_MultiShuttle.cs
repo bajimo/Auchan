@@ -100,7 +100,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                 else
                 {
                     mheController_Multishuttle.SendTelegram(bodyB, true);
-                    mheController_Multishuttle.SendTelegram(bodyA, true); //position A load 
+                    //MRP 24-10-2018. Wait until transport telegram is received for load B. mheController_Multishuttle.SendTelegram(bodyA, true); //position A load 
                 }
                 mheController_Multishuttle.PickStationLock(caseload, (IATCCaseLoadType)conv.UserData);
             }
