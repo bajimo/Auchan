@@ -228,15 +228,20 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                 if (ElevatorTasks.Any())
                 {
                     //Look for any type but make sure that the drop station is available before sending any missions
-                    var oTasks = (ElevatorTasks.Where(task => task.Flow == TaskType.Outfeed && ((DropStationConveyor)task.DestinationLoadBConv).DropStationConvEmpty));
+                    var oTasks = (ElevatorTasks.Where(task => task.Flow == TaskType.Outfeed && ((DropStationConveyor)task.DestinationLoadBConv).DropStationConvEmpty)).ToList();
 
-                    if (oTasks != null && oTasks.Any())
+                    if (oTasks.Any())
                     {
                         //ElevatorTask lowestTask = oTasks.OrderBy(x => x.DropIndexLoadB).FirstOrDefault(x => x.DropIndexLoadB != 0); //Exclude unsequenced loads
-                        var sTasks = OrderTasks(oTasks); //Does a special sort to allow for wrap around of the Drop Index
-                        //MRP 11-10-2018. Only start a task where the front load is ready and ID match
-                        //ElevatorTask lowestTask = sTasks.FirstOrDefault(x => x.DropIndexLoadB != 0); //Exclude unsequenced loads
-                        ElevatorTask lowestTask = sTasks.FirstOrDefault(x => x.DropIndexLoadB != 0 && ((RackConveyor)x.SourceLoadBConv).LocationB.Active && ((RackConveyor)x.SourceLoadBConv).LocationB.ActiveLoad.Identification == x.LoadB_ID); //Exclude unsequenced loads
+                        var sTasks = OrderTasks(oTasks).ToList(); //Does a special sort to allow for wrap around of the Drop Index
+                        //MRP 25-10-2018. Only start a task where the front load is ready and ID match. Only start the first task - these are sequenced! 
+                        var lowestTask = sTasks.FirstOrDefault(x => x.DropIndexLoadB != 0); //Exclude unsequenced loads        
+                        if (lowestTask != null)
+                        {
+                            var nextDropIndex = lowestTask.DropIndexLoadB; //there could be more loads with the same dropindex so search for one that is ready.
+                            lowestTask = sTasks.FirstOrDefault(x => x.DropIndexLoadB == nextDropIndex && ((RackConveyor) lowestTask.SourceLoadBConv).LocationB.Active && ((RackConveyor) lowestTask.SourceLoadBConv).LocationB.ActiveLoad.Identification == lowestTask.LoadB_ID);
+                        }
+
                         ElevatorTask blockingTask = null;
                         if (lowestTask != null)
                         {
