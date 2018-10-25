@@ -1,7 +1,0 @@
-C:\Xcelgo\Xcelgo Experior\Experior.Plugin.BK.dll
-C:\Xcelgo\Xcelgo Experior\Experior.Plugin.BK.pdb
-D:\Git\DematicExperior\BK\obj\Release\BK.csprojResolveAssemblyReference.cache
-D:\Git\DematicExperior\BK\obj\Release\Experior.Plugin.Properties.Resources.resources
-D:\Git\DematicExperior\BK\obj\Release\BK.csproj.GenerateResource.Cache
-D:\Git\DematicExperior\BK\obj\Release\Experior.Plugin.BK.dll
-D:\Git\DematicExperior\BK\obj\Release\Experior.Plugin.BK.pdb

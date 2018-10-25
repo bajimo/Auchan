@@ -1,5 +1,0 @@
-C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.Storage.PalletCrane.dll
-C:\Xcelgo\Xcelgo Experior\Experior.Catalog.Dematic.Storage.PalletCrane.pdb
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Storage.PalletCrane\obj\Release\Experior.Catalog.Dematic.Storage.PalletCrane.csprojResolveAssemblyReference.cache
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Storage.PalletCrane\obj\Release\Experior.Catalog.Dematic.Storage.PalletCrane.dll
-D:\Git\DematicExperior\Experior.Catalog.Dematic.Storage.PalletCrane\obj\Release\Experior.Catalog.Dematic.Storage.PalletCrane.pdb
