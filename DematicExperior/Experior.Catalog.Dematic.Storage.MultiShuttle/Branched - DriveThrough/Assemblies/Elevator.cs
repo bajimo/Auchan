@@ -234,18 +234,12 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                     {
                         //ElevatorTask lowestTask = oTasks.OrderBy(x => x.DropIndexLoadB).FirstOrDefault(x => x.DropIndexLoadB != 0); //Exclude unsequenced loads
                         var sTasks = OrderTasks(oTasks).ToList(); //Does a special sort to allow for wrap around of the Drop Index
-                        //MRP 25-10-2018. Only start a task where the front load is ready and ID match. Only start the first task - these are sequenced! 
                         var lowestTask = sTasks.FirstOrDefault(x => x.DropIndexLoadB != 0); //Exclude unsequenced loads        
-                        if (lowestTask != null)
-                        {
-                            var nextDropIndex = lowestTask.DropIndexLoadB; //there could be more loads with the same dropindex so search for one that is ready.
-                            lowestTask = sTasks.FirstOrDefault(x => x.DropIndexLoadB == nextDropIndex && ((RackConveyor) lowestTask.SourceLoadBConv).LocationB.Active && ((RackConveyor) lowestTask.SourceLoadBConv).LocationB.ActiveLoad.Identification == lowestTask.LoadB_ID);
-                        }
-
+    
                         ElevatorTask blockingTask = null;
                         if (lowestTask != null)
                         {
-                            blockingTask = ElevatorTasks.FirstOrDefault(x => x.SourceLoadBConv == lowestTask.SourceLoadBConv && ((RackConveyor)x.SourceLoadBConv).LocationB.ActiveLoad != null && ((RackConveyor)x.SourceLoadBConv).LocationB.ActiveLoad.Identification == x.LoadB_ID);
+                            blockingTask = sTasks.FirstOrDefault(x => x.SourceLoadBConv == lowestTask.SourceLoadBConv && ((RackConveyor)x.SourceLoadBConv).LocationB.ActiveLoad != null && ((RackConveyor)x.SourceLoadBConv).LocationB.ActiveLoad.Identification == x.LoadB_ID);
                         }
 
                         //Check that the lowest task is not blocked by a Housekeep move (IntraLevel)
@@ -255,7 +249,7 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                             if (lowestTask != null && lowestTask.TaskLoadLocationBack())
                             {
                                 //Check if there is a load in the front location with the same drop index
-                                frontTask = oTasks.FirstOrDefault(x => x != lowestTask && x.SourceLoadBConv == lowestTask.SourceLoadBConv && x.DropIndexLoadB == lowestTask.DropIndexLoadB);
+                                frontTask = sTasks.FirstOrDefault(x => x != lowestTask && x.SourceLoadBConv == lowestTask.SourceLoadBConv && x.DropIndexLoadB == lowestTask.DropIndexLoadB);
                             }
                             //Is the next task on the same level the next sequence number
                             //ElevatorTask nextLowestTask = oTasks.OrderBy(x => x.DropIndexLoadB).FirstOrDefault(x => x != lowestTask && x.DropIndexLoadB != 0); //Exclude unsequenced loads, are they on the same level?
@@ -322,22 +316,28 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                         }
                         else
                         {
-                            lowestTask = blockingTask;
+                            if (blockingTask.DropIndexLoadB <= lowestTask.DropIndexLoadB)
+                            {
+                                lowestTask = blockingTask;
+                            }
                         }
 
                         //Set the current task and start the elevator moving
-
-                        CurrentTask = lowestTask;
+                        if (lowestTask != null && ((RackConveyor)lowestTask.SourceLoadBConv).LocationB.Active && ((RackConveyor)lowestTask.SourceLoadBConv).LocationB.ActiveLoad.Identification == lowestTask.LoadB_ID)
+                        {
+                            CurrentTask = lowestTask;
+                        }
                     }
 
                     else //When the drop station is not available then try to find one on the infeed station
                     {
                         //look for inbound tasks and check destination is available
-                        var iTasks = ElevatorTasks.Where(task => (task.Flow == TaskType.Infeed || task.Flow == TaskType.HouseKeep) &&
+
+                        var iTasks = ElevatorTasks.Where(task => (task.Flow == TaskType.Infeed || task.Flow == TaskType.HouseKeep)).Where(task =>
                                                                  (task.DestinationLoadAConv != null && task.DestinationLoadAConv == task.DestinationLoadBConv && task.DestinationLoadAConv.TransportSection.Route.Loads.Count == 0) ||  //Unload 2 at same level
                                                                  (task.DestinationLoadAConv != task.DestinationLoadBConv && //Unload at different levels
                                                                  (task.DestinationLoadAConv == null || task.DestinationLoadAConv.TransportSection.Route.Loads.Count <= 1) && 
-                                                                 (task.DestinationLoadBConv == null || task.DestinationLoadBConv.TransportSection.Route.Loads.Count <= 1))); 
+                                                                 (task.DestinationLoadBConv == null || task.DestinationLoadBConv.TransportSection.Route.Loads.Count <= 1))).ToList(); 
                         if (iTasks.Any())
                         {
                             while (CurrentTask == null)
@@ -355,7 +355,7 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                                         if (frontTask != null)
                                         {
                                             //Remove from the list
-                                            iTasks = iTasks.Where(x => x != frontTask);
+                                            iTasks = iTasks.Where(x => x != frontTask).ToList();
                                             continue;
                                         }
                                     }
