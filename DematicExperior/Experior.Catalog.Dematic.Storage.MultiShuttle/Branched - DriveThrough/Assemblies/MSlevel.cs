@@ -383,7 +383,9 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
             }
         }
 
-        private void ShuttleOnArrived(object sender, EventArgs e)
+        public bool waitingForLoadAtRI = false; 
+
+        public void ShuttleOnArrived(object sender, EventArgs e)
         {
             Track.Route.Motor.Stop();
             if (CurrentTask != null)
@@ -397,11 +399,19 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                 else if (HasArrivedAtRackInfeedConv() && Vehicle.LoadsOnBoard == 0)
                 {
                     var cl = ParentMS.ConveyorLocations.Find(x => x.LocName == CurrentTask.Source);
-                    if (cl != null && cl.Active)
+                    if (cl != null)
                     {
-                        Vector3 v3 = Vehicle.Position - cl.ActiveLoad.Position;
-                        v3.Y = 0; //Y is up so do not move the height.
-                        cl.ActiveLoad.Translate(() => cl.ActiveLoad.Switch(Vehicle.shuttleAP, true), v3, ParentMS.TimeToPos1);
+                        if (cl.Active)
+                        {
+                            Vector3 v3 = Vehicle.Position - cl.ActiveLoad.Position;
+                            v3.Y = 0; //Y is up so do not move the height.
+                            cl.ActiveLoad.Translate(() => cl.ActiveLoad.Switch(Vehicle.shuttleAP, true), v3, ParentMS.TimeToPos1);
+                            waitingForLoadAtRI = false;
+                        }
+                        else
+                        {
+                            waitingForLoadAtRI = true;
+                        }
                     }
                     return;
                 }

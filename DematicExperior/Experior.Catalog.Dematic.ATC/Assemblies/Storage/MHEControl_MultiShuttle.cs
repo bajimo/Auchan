@@ -148,10 +148,10 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
 
             if (destination.LocationType() == LocationTypes.RackConv)
             {
-                IATCCaseLoadType atcLoad = e._caseLoad as IATCCaseLoadType;
-                atcLoad.Location = atcLoad.Destination;
-                string sendTelegram = mheController_Multishuttle.CreateTelegramFromLoad(TelegramTypes.MultishuttleTransportFinishedTelegram, atcLoad);
-                mheController_Multishuttle.SendTelegram(sendTelegram, true);
+            //    IATCCaseLoadType atcLoad = e._caseLoad as IATCCaseLoadType;
+            //    atcLoad.Location = atcLoad.Destination;
+            //    string sendTelegram = mheController_Multishuttle.CreateTelegramFromLoad(TelegramTypes.MultishuttleTransportFinishedTelegram, atcLoad);
+            //    mheController_Multishuttle.SendTelegram(sendTelegram, true);
 
                 return;
             }
@@ -181,22 +181,47 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
             }
             else
             {
+                //int level;
+                //st.Destination = mheController_Multishuttle.DCIbinLocToMultiShuttleLoc(destination, out level, theMultishuttle);
+                //st.Level = level;
+                //st.LoadID = e._caseLoad.Identification;
+                //st.Source = e._locationName;
+
+                //theMultishuttle.shuttlecars[level].ShuttleTasks.Add(st);
+
+
+                //Task is set when load arrives at first position, it's possible that the shuttle is already waiting so need to be kicked again.
                 int level;
                 st.Destination = mheController_Multishuttle.DCIbinLocToMultiShuttleLoc(destination, out level, theMultishuttle);
                 st.Level = level;
-                st.LoadID = e._caseLoad.Identification;
-                st.Source = e._locationName;
 
-                theMultishuttle.shuttlecars[level].ShuttleTasks.Add(st);
+                if (theMultishuttle.shuttlecars[level].waitingForLoadAtRI)
+                {
+                    theMultishuttle.shuttlecars[level].ShuttleOnArrived(null, null);
+                }
             }
         }
 
         void theMultishuttle_OnArrivedAtInfeedRackConvPosA(object sender, RackConveyorArrivalEventArgs e)
         {
+            ShuttleTask st = new ShuttleTask();
+            string destination = ((IATCCaseLoadType)e._caseLoad).Destination;
+            
+            if (destination.LocationType() == LocationTypes.RackConv)
+            {
+                IATCCaseLoadType atcLoad = e._caseLoad as IATCCaseLoadType;
+                atcLoad.Location = atcLoad.Destination;
+                string sendTelegram = mheController_Multishuttle.CreateTelegramFromLoad(TelegramTypes.MultishuttleTransportFinishedTelegram, atcLoad);
+                mheController_Multishuttle.SendTelegram(sendTelegram, true);
+
+                //return;
+            }
+
             if (e._elevator.ElevatorConveyor.Route.Loads.Count == 0)
             {
                 e._elevator.SetNewElevatorTask();
             }
+
         }
 
         void theMultishuttle_OnArrivedAtElevatorConvPosA(object sender, ArrivedOnElevatorEventArgs e)
