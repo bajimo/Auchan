@@ -152,7 +152,7 @@ namespace Experior.Controller.AuchanCarvin
 
             if (!initialising && plc11.plcConnected == true)
             {
-                plc11.SendUnitFillingTelegram("CCDE01LO01", stackBuffer.LoadCount.ToString(), "29");
+                plc11.SendUnitFillingTelegram("CCDE01LO01", stackBuffer.LoadCount.ToString(), "28");
             }
         }
 
@@ -262,8 +262,11 @@ namespace Experior.Controller.AuchanCarvin
         private void StartSystem()
         {
             initialising = true;
+
+            ResetStackBufferCount();
+
             StraightConveyor trayStackBuffer = Core.Assemblies.Assembly.Items["TRAYSTACKBUFFER"] as StraightConveyor;
-            for (int i = 1; i < 218; i++)
+            for (int i = 1; i < 233; i++)
             {
                 trayStackBuffer.DoubleClick();
             }
@@ -322,11 +325,6 @@ namespace Experior.Controller.AuchanCarvin
             sender.OnElapsed -= StartTimer_OnElapsed;
             Core.Environment.Time.Scale = 1;
             initialising = false;
-        }
-
-        void Scene_OnResetCompleted()
-        {
-            ResetDropStationTimers();
         }
 
         private void InitialisePushers()
