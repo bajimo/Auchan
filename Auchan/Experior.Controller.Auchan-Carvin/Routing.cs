@@ -296,6 +296,11 @@ namespace Experior.Controller.AuchanCarvin
 
             stackBufferCheck.Reset();
             stackBufferCheck.Start();
+
+            foreach (var position in tCarDestinations.Values)
+            {
+                position.inTransit = false;
+            }
         }
 
         private void InitialisePalleting()
