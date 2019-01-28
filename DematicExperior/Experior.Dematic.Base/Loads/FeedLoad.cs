@@ -224,7 +224,7 @@ namespace Experior.Dematic.Base
         public static string GetSSCCBarcode()
         {
             //Look for a text file called Barcode.txt in the Experior file
-            string barcodeFile = Environment.CurrentDirectory + "\\Barcode.txt";
+            string barcodeFile = Core.Directories.Model + "\\Barcode.txt";
             string result = null;
             long currentBarcode;
 
