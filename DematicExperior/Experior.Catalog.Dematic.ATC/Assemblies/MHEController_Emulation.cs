@@ -62,20 +62,20 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies
             if (Core.Assemblies.Assembly.Items.ContainsKey(telegramFields.GetFieldValue(TelegramFields.location)) &&
                 Core.Assemblies.Assembly.Items[telegramFields.GetFieldValue(TelegramFields.location)] is StraightConveyor)
             {
-                ATCCaseLoad caseLoad = CreateCaseLoad(TelegramTypes.CreateTuTelegram, telegramFields);
+                ATCTray caseTray = CreateCaseTray(TelegramTypes.CreateTuTelegram, telegramFields);
 
                 StraightConveyor sourceConv = Core.Assemblies.Assembly.Items[telegramFields.GetFieldValue(TelegramFields.location)] as StraightConveyor;
-                caseLoad.SetYaw(sourceConv.Width, sourceConv.CaseOrientation);
+                caseTray.SetYaw(sourceConv.Width, sourceConv.CaseOrientation);
                 float position = 0;
-                if (caseLoad.Yaw == 0)
+                if (caseTray.Yaw == 0)
                 {
-                    position = position + (caseLoad.Length / 2);
+                    position = position + (caseTray.Length / 2);
                 }
                 else
                 {
-                    position = position + (caseLoad.Width / 2);
+                    position = position + (caseTray.Width / 2);
                 }
-                sourceConv.TransportSection.Route.Add(caseLoad, position);
+                sourceConv.TransportSection.Route.Add(caseTray, position);
 
             }
             else
@@ -105,9 +105,9 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies
             }
         }
 
-        public override ATCCaseLoad CreateCaseLoad(TelegramTypes Type, string[] Telegram)
+        public ATCTray CreateCaseTray(TelegramTypes Type, string[] Telegram)
         {
-            ATCCaseLoad newLoad = null;
+            ATCTray newLoad = null;
 
             if (Type == TelegramTypes.CreateTuTelegram)
             {
@@ -123,18 +123,20 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies
                 weight = (weight == null) ? CaseLoadWeight : weight;
                 color = (Color == null) ? DefaultLoadColor.ToString() : color;
 
-                newLoad = CreateCaseLoad(
+                newLoad = CreateTray(
                     Telegram.GetFieldValue(TelegramFields.mts),
                     Telegram.GetFieldValue(TelegramFields.tuIdent),
                     Telegram.GetFieldValue(TelegramFields.tuType),
                     Telegram.GetFieldValue(TelegramFields.location), //Location
                     Telegram.GetFieldValue(TelegramFields.destination),
                     Telegram.GetFieldValue(TelegramFields.presetStateCode),
-                    height,
-                    width,
-                    length,
-                    weight,
-                    color);
+                    0.2f,
+                    0.4f,
+                    0.6f,
+                    100,
+                    color,
+                    TrayStatus.Loaded,
+                    5);
             }
 
             //Deal with additional project specific fields

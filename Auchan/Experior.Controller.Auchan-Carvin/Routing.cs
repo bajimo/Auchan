@@ -1688,6 +1688,12 @@ namespace Experior.Controller.AuchanCarvin
                     PusherLoadTimer[pusher.Name].Start();
                     PushersWaiting.Remove(pusher.Name);
                     PusherWaitingMode[pusher.Name] = false;
+
+                    for (int i = 0; i < PusherActiveLoads[pusher.Name].Count; i++)
+                    {
+                        ATCTray tray = PusherActiveLoads[pusher.Name][i] as ATCTray;
+                        tray.LoadColor = System.Drawing.Color.Yellow;
+                    }
                 }
             }
         }
@@ -1695,7 +1701,6 @@ namespace Experior.Controller.AuchanCarvin
         private void PusherPushTimer_OnElapsed(Timer sender)
         {
             string pusherName = (string)sender.UserData;
-
 
             //When the number of loads on the pusher = 4 then get rid of the loads and release 
             float position = 0.5f;
@@ -1756,9 +1761,9 @@ namespace Experior.Controller.AuchanCarvin
                     //Get the pushed conveyor and check if it's clear or not
                     StraightConveyor pushTooPoint = Core.Assemblies.Assembly.Items[PushTooPoint((string)pusher.Name)] as StraightConveyor;
                     if (//There is something to push
-                        pushTooPoint.TransportSection.Route.Loads.Count == 0 && 
+                        pushTooPoint.TransportSection.Route.Loads.Count == 0 &&
                         //AND SortSeq(Group) and SortID(Pallet) are the same on the pusher and the loads to be pushed
-                        ((PusherCurrentGroup[PushTooPoint(pusher.Name)] == PusherActiveLoads[pusher.Name][0].SortSequence && 
+                        ((PusherCurrentGroup[PushTooPoint(pusher.Name)] == PusherActiveLoads[pusher.Name][0].SortSequence &&
                         PusherCurrentPallet[PushTooPoint(pusher.Name)] == PusherActiveLoads[pusher.Name][0].SortID) ||
                         //OR the previous group has completed AND
                         (PusherGroupEnd[PushTooPoint(pusher.Name)] == "E" &&
@@ -1802,7 +1807,7 @@ namespace Experior.Controller.AuchanCarvin
                     ATCTray tray = PusherActiveLoads[pusher.Name][i] as ATCTray;
                     tray.LoadColor = System.Drawing.Color.Orange;
                 }
-                            }
+            }
             return false;
         }
 
