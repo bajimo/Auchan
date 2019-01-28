@@ -63,6 +63,8 @@ namespace Experior.Controller.AuchanCarvin
         private List<string> PushersWaiting = new List<string>();
         private List<string> LiftsWaiting = new List<string>();
 
+        private Dictionary<Load, int> StackDestination = new Dictionary<Load, int>();
+        private int stackLineRoundRobin;
         private Dictionary<int, int> StackLineBufferCount = new Dictionary<int, int>();
         private Dictionary<string, tCarDest> tCarDestinations = new Dictionary<string, tCarDest>();
 
@@ -266,7 +268,7 @@ namespace Experior.Controller.AuchanCarvin
             ResetStackBufferCount();
 
             StraightConveyor trayStackBuffer = Core.Assemblies.Assembly.Items["TRAYSTACKBUFFER"] as StraightConveyor;
-            for (int i = 1; i < 233; i++)
+            for (int i = 1; i < 239; i++)
             {
                 trayStackBuffer.DoubleClick();
             }
@@ -909,30 +911,52 @@ namespace Experior.Controller.AuchanCarvin
                 else if (sender.Name.Substring(0,8) == "STACKDIV")
                 {
                     load.Stop();
-                    //Get my count
                     int result;
                     if (int.TryParse(sender.Name.Substring(8, 2), out result))
                     {
-                        int myCount = StackLineBufferCount[result];
-
-                        //Get only downstream locations
-                        Dictionary<int, int> downstream = StackLineBufferCount.Where(x => x.Key > result).ToDictionary(x => x.Key, x => x.Value);
-
-                        //is this lane amongst the low lanes
-                        Dictionary<int, int> lines = downstream.Where(x => x.Value < myCount).ToDictionary(x => x.Key, x => x.Value);
-                        if (lines.Count > 0 && sender.NextAvailableStatusStraight.Available == RouteStatuses.Available)
+                        //Choose destination at 1 if no destination exists
+                        if ((result == 1 && !StackDestination.ContainsKey(load)))
                         {
-                            //I want to go straight, check if it's blocked!
-                            sender.RouteLoad(load, new List<Direction> { Direction.Straight}, false); //There are lanes with more need than this one
+                            var minCount = StackLineBufferCount.Values.Min();
+                            var lanesWithMinCount = StackLineBufferCount.Where(x => x.Value == minCount && x.Key >= stackLineRoundRobin).Select(x => x.Key).ToList();
+                            if (!lanesWithMinCount.Any())
+                            {
+                                lanesWithMinCount = StackLineBufferCount.Where(x => x.Value == minCount).Select(x => x.Key).ToList();
+                            }
+                            var lane = lanesWithMinCount.First();
+                            stackLineRoundRobin = lane + 1;
+                            StackDestination[load] = lane;
                         }
-                        else if (lines.Count == 0 && sender.NextAvailableStatusRight.Available == RouteStatuses.Available)
+                        else if (result > StackDestination[load])
                         {
-                            //I want to go right, check if it's blocked!
-                            sender.RouteLoad(load, new List<Direction> { Direction.Right}, false); //This one is in need!
+                            //Destination is passed, choose a new destination
+                            var downstream = StackLineBufferCount.Where(x => x.Key >= result).ToDictionary(x => x.Key, x => x.Value);
+                            var minCount = downstream.Values.Min();
+                            var lanesWithMinCount = downstream.Where(x => x.Value == minCount).Select(x => x.Key).ToList();
+                            var lane = lanesWithMinCount.First();
+                            StackDestination[load] = lane;
+                        }
+
+                        var destination = StackDestination[load];
+                        if (result > destination && sender.NextAvailableStatusRight.Available == RouteStatuses.Available)
+                        {
+                            //destination is passed, try divert
+                            sender.RouteLoad(load, new List<Direction> { Direction.Right }, false);
+                        }
+                        else if (result == destination && sender.NextAvailableStatusRight.Available == RouteStatuses.Available)
+                        {
+                            //this is the destination, divert if possible
+                            sender.RouteLoad(load, new List<Direction> { Direction.Right }, false);
+                        }
+                        else if (result != destination && sender.NextAvailableStatusStraight.Available == RouteStatuses.Available)
+                        {
+                            //Go straight if possible
+                            sender.RouteLoad(load, new List<Direction> { Direction.Straight }, false);
                         }
                         else
                         {
-                            sender.RouteLoad(load, new List<Direction> { Direction.Right, Direction.Straight }, false); //Go which ever way you can
+                            //Just do what you need to do
+                            sender.RouteLoad(load, new List<Direction> { Direction.Right, Direction.Straight }, false);
                         }
                     }
                 }
@@ -1005,6 +1029,8 @@ namespace Experior.Controller.AuchanCarvin
 
         private void ResetStackBufferCount()
         {
+            stackLineRoundRobin = 0;
+            StackDestination.Clear();
             StackLineBufferCount.Clear();
             for (int line = 1; line < 17; line++)
             {
@@ -1063,6 +1089,7 @@ namespace Experior.Controller.AuchanCarvin
                 if (int.TryParse(photocell.Name.Substring(2, 2), out result))
                 {
                     StackLineBufferCount[result]++;
+                    StackDestination.Remove(e._Load);
                 }
             }
             else if (e._PhotocellStatus == PhotocellState.Clear && photocell.Name.Length == 4 && photocell.Name.Substring(0,2) == "SX")
