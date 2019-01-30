@@ -74,23 +74,30 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
 
         void theMultishuttle_OnArrivedAtPickStationConvPosA(object sender, PickDropStationArrivalEventArgs e)
         {
-            IATCCaseLoadType caseload = (IATCCaseLoadType)(e._caseLoad);
-            caseload.Location = FormatPickDropLocation(e._locationName, ConveyorTypes.Pick); //Update the location
-            caseload.Destination = caseload.Location;
+            IATCCaseLoadType caseloadA = (IATCCaseLoadType)(e._caseLoad);
+            caseloadA.Location = FormatPickDropLocation(e._locationName, ConveyorTypes.Pick); //Update the location
+            caseloadA.Destination = caseloadA.Location;
 
-            string tlg = mheController_Multishuttle.CreateTelegramFromLoad(TelegramTypes.TransportRequestTelegram, caseload);
+            string tlg = mheController_Multishuttle.CreateTelegramFromLoad(TelegramTypes.TransportRequestTelegram, caseloadA);
 
             string[] tlgSplit = tlg.Split(',');
             tlgSplit.SetFieldValue(TelegramFields.stateCode, "OK");
-            caseload.UserData = string.Join(",", tlgSplit); //putting it in user data alows easer message creation for the ATC multipal messages , the load reference is held on the conveyor see below
+            caseloadA.UserData = string.Join(",", tlgSplit); //putting it in user data alows easer message creation for the ATC multipal messages , the load reference is held on the conveyor see below
 
             var loc = theMultishuttle.ConveyorLocations.Find(x => x.LocName == e._locationName);
             var conv = loc.Parent.Parent.Parent as PickStationConveyor;
 
             if (e._numberOfLoads == 2)
             {
-                string bodyB = (string)((IATCCaseLoadType)conv.UserData).UserData; //Grab the already created message from the load using the conveyor load reference created below
-                string bodyA = (string)(caseload.UserData);
+                var caseLoadB = (IATCCaseLoadType)conv.TransportSection.Route.Loads.Last.Value; //Front load
+                if (caseLoadB == caseloadA)
+                {
+                    Core.Environment.Log.Write($"{this.theMultishuttle.Name} Error: theMultishuttle_OnArrivedAtPickStationConvPosA LoadA == LoadB!!");
+                    Core.Environment.Scene.Pause();
+                }
+
+                string bodyB = (string)(caseLoadB.UserData); //Grab the already created message from the load using the load reference 
+                string bodyA = (string)(caseloadA.UserData);
                 if (MultiPSTelegrams)
                 {
                     string sendTelegram = Telegrams.CreateMultipalMessage(new List<string>() { bodyB, bodyA }, 
@@ -102,11 +109,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                     mheController_Multishuttle.SendTelegram(bodyB, true);
                     //MRP 24-10-2018. Wait until transport telegram is received for load B. mheController_Multishuttle.SendTelegram(bodyA, true); //position A load 
                 }
-                mheController_Multishuttle.PickStationLock(caseload, (IATCCaseLoadType)conv.UserData);
-            }
-            else //save the load reference so that if a second load arrives multipal telegram construction is easier
-            {
-                conv.UserData = caseload; //save case load to userdata for easier multipal message creation i.e. when e._numberOfLoads == 2
+                mheController_Multishuttle.PickStationLock(caseLoadB);
             }
         }
 
@@ -116,7 +119,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
         void theMultishuttle_OnArrivedAtPickStationConvPosB(object sender, PickDropStationArrivalEventArgs e)
         {
             mheController_Multishuttle.SendTelegram((string)e._caseLoad.UserData, true); //telegram already created when at location A 
-            mheController_Multishuttle.PickStationLock(null, (IATCCaseLoadType)e._caseLoad);
+            mheController_Multishuttle.PickStationLock((IATCCaseLoadType)e._caseLoad);
         }
 
         /// <summary>

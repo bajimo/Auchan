@@ -142,15 +142,14 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
 
         public override void Reset()
         {
-
             foreach (Load l in Route.Loads)
             {
                 l.Dispose();
             }
 
-
             base.Reset();
             RouteAvailable = RouteStatuses.Request;
+            ElevatorPickOneOfTwo = false;
         }
 
         //void sensor_OnLeave2(DematicSensor sender, Load load)
@@ -181,10 +180,18 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
 
         private void sensor_OnEnterB(DematicSensor sender, Load load)
         {
-            if (RouteAvailable == RouteStatuses.Blocked && TransportSection.Route.Loads.Count < 2)
+            if (RouteAvailable == RouteStatuses.Blocked && TransportSection.Route.Loads.Count < 2 && !ElevatorPickOneOfTwo)
             {
+                //This is the second load. Let it move to the elevator
                 return;
             }
+
+            if (RouteAvailable == RouteStatuses.Blocked && ElevatorPickOneOfTwo)
+            {
+                //RouteAvailable = RouteStatuses.Request;
+                ElevatorPickOneOfTwo = false;
+            }
+
             load.Stop();
             psTimeoutTimer.Start();
             //ParentMultiShuttle.ArrivedAtPickStationConvPosB(new PickDropStationArrivalEventArgs(LocationB.LocName, (Case_Load)load, Elevator));
@@ -237,11 +244,12 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
         public RackSide Side { get; set; }
 
         public int AisleNumber { get; set; }
+        public bool ElevatorPickOneOfTwo { get; internal set; }
 
         void Leaving_OnEnter(ActionPoint sender, Load load)
         {
             ClearPreviousPhotocells(load);
-            load.Switch(Elevator.ElevatorConveyor.Entering);        
+            load.Switch(Elevator.ElevatorConveyor.Entering);
         }
 
         private void ClearPreviousPhotocells(Load load)

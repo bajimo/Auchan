@@ -556,6 +556,21 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                     {
                         loadBSpecial.Release();
                     }
+
+                    if (B != null && B.Parent.Parent.Parent is PickStationConveyor ps)
+                    {
+                        int pickCount = 1;
+                        if (loadASpecial != null)
+                            pickCount = 2;
+
+                        if (ps.TransportSection.Route.Loads.Count > 1 && pickCount == 1)
+                        {
+                            //Pick station has two totes but elevator should only pick 1.
+                            ps.ElevatorPickOneOfTwo = true;
+                            Log.Write($"{ParentMultiShuttle.Name}, {ElevatorName}: Two loads at PS but elevator will just pick 1.");
+                        }
+                    }
+
                 }
                 else if (CurrentTask.UnloadCycle == Cycle.Single)
                 {
