@@ -917,6 +917,9 @@ namespace Experior.Controller.AuchanCarvin
                         //Choose destination at 1 if no destination exists
                         if ((result == 1 && !StackDestination.ContainsKey(load)))
                         {
+                            stackLineRoundRobin++;
+                            if (stackLineRoundRobin == 17)
+                                stackLineRoundRobin = 1;
                             var minCount = StackLineBufferCount.Values.Min();
                             var lanesWithMinCount = StackLineBufferCount.Where(x => x.Value == minCount && x.Key >= stackLineRoundRobin).Select(x => x.Key).ToList();
                             if (!lanesWithMinCount.Any())
@@ -924,7 +927,6 @@ namespace Experior.Controller.AuchanCarvin
                                 lanesWithMinCount = StackLineBufferCount.Where(x => x.Value == minCount).Select(x => x.Key).ToList();
                             }
                             var lane = lanesWithMinCount.First();
-                            stackLineRoundRobin = lane + 1;
                             StackDestination[load] = lane;
                         }
                         else if (result > StackDestination[load])
