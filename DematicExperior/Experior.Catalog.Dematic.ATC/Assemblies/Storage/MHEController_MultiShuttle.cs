@@ -303,6 +303,13 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                                     waitForSecondTransportAtPs.Remove(caseA);
                                 }
 
+                                var tasks = ms.elevators.First(x => x.ElevatorName == side + aisle).ElevatorTasks;
+                                if (tasks.Any(t => t.LoadB_ID == caseB.TUIdent))
+                                {
+                                    Log.Write($"{Name}: Transport mission received for second tote at PS but elevator already ordered to pick only the front tote. Transport ignored.");
+                                    return;
+                                }
+
                                 UpDateLoadParameters(telegramFields, caseA);
                                 caseA.Destination = telegramFields.GetFieldValue(TelegramFields.destination);
                                 caseA.Source = telegramFields.GetFieldValue(TelegramFields.source);
