@@ -21,7 +21,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
         MHEControl_MultiShuttle control;
         List<Timer> RunningPSTimers = new List<Timer>();
 
-        public MHEController_Multishuttle(MHEController_MultishuttleATCInfo info):base(info)
+        public MHEController_Multishuttle(MHEController_MultishuttleATCInfo info) : base(info)
         {
             mHEController_MultishuttleInfo = info;
         }
@@ -75,36 +75,36 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
 
             IATCCaseLoadType LoadPosB = (IATCCaseLoadType)(((object[])sender.UserData)[0]);
             if (LoadPosB.UserData == null) return;
-            SendTelegram((string)LoadPosB.UserData, true);       
+            SendTelegram((string)LoadPosB.UserData, true);
             PickStationLock(LoadPosB);
         }
 
         private void StartMultipleTransportTelegramReceived(string[] telegramFields)
         {
-            string currentLoc       = string.Empty;
+            string currentLoc = string.Empty;
             DematicActionPoint locA = null, locB = null;
-            MultiShuttle ms         = null;
+            MultiShuttle ms = null;
 
             TelegramTypes type = telegramFields.GetTelegramType();
 
             List<string> indexTags;
             List<string> messageBodies = Telegrams.DeMultaplise(telegramFields, telegramFields.GetTelegramType(), out indexTags);
-            string[] messageBodySplit  = messageBodies.First().Split(',');//don't care which message is used as both on the same conveyor
-            string source              = messageBodySplit.GetFieldValue(TelegramFields.sources);
-            string destLoc0            = telegramFields.GetFieldValue(TelegramFields.destinations, "[0]");
-            string destLoc1            = telegramFields.GetFieldValue(TelegramFields.destinations, "[1]");
-            string tuIdent0            = telegramFields.GetFieldValue(TelegramFields.tuIdents, "[0]");
-            string tuIdent1            = telegramFields.GetFieldValue(TelegramFields.tuIdents, "[1]");
-            string aisle               = GetPSDSLocFields(source, PSDSRackLocFields.Aisle);
-            string side                = GetPSDSLocFields(source, PSDSRackLocFields.Side);
+            string[] messageBodySplit = messageBodies.First().Split(',');//don't care which message is used as both on the same conveyor
+            string source = messageBodySplit.GetFieldValue(TelegramFields.sources);
+            string destLoc0 = telegramFields.GetFieldValue(TelegramFields.destinations, "[0]");
+            string destLoc1 = telegramFields.GetFieldValue(TelegramFields.destinations, "[1]");
+            string tuIdent0 = telegramFields.GetFieldValue(TelegramFields.tuIdents, "[0]");
+            string tuIdent1 = telegramFields.GetFieldValue(TelegramFields.tuIdents, "[1]");
+            string aisle = GetPSDSLocFields(source, PSDSRackLocFields.Aisle);
+            string side = GetPSDSLocFields(source, PSDSRackLocFields.Side);
             string destA = null, destB = null;
 
             // takes the form aasyyxz: aa=aisle, s = side, yy = level, x = conv type see enum ConveyorTypes , Z = loc A or B e.g. 01R05OA
             string loc = string.Format("{0}{1}{2}P", aisle, side, GetPSDSLocFields(source, PSDSRackLocFields.Level));
 
-            ms           = GetMultishuttleFromAisleNum(loc + "A");
-            locA         = ms.ConveyorLocations.Find(x => x.LocName == loc + "A");
-            locB         = ms.ConveyorLocations.Find(x => x.LocName == loc + "B");
+            ms = GetMultishuttleFromAisleNum(loc + "A");
+            locA = ms.ConveyorLocations.Find(x => x.LocName == loc + "A");
+            locB = ms.ConveyorLocations.Find(x => x.LocName == loc + "B");
 
             if ((locA != null && locA.Active) && (locB != null && locB.Active))
             {
@@ -132,9 +132,9 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
 
                 if (destLoc0 == null || destLoc1 == null)
                 {
-                    Log.Write(string.Format("{0}: Invalid destinations sent in StartMultipleTransportTelegram",  Name), Color.Red);
+                    Log.Write(string.Format("{0}: Invalid destinations sent in StartMultipleTransportTelegram", Name), Color.Red);
                     return;
-                } 
+                }
 
                 if (telegramFields.GetFieldValue(TelegramFields.destinations, "[0]").LocationType() == LocationTypes.DS)  //Assume that both going to DS
                 {
@@ -185,14 +185,14 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
 
                 if (messageA != null && messageB != null)
                 {
-                    ElevatorTask et     = new ElevatorTask(locA.ActiveLoad.Identification, locB.ActiveLoad.Identification)
+                    ElevatorTask et = new ElevatorTask(locA.ActiveLoad.Identification, locB.ActiveLoad.Identification)
                     {
-                        LoadCycle        = Cycle.Double,
-                        Flow             = TaskType.Infeed,
-                        SourceLoadA      = locA.LocName,
-                        SourceLoadB      = locB.LocName,
+                        LoadCycle = Cycle.Double,
+                        Flow = TaskType.Infeed,
+                        SourceLoadA = locA.LocName,
+                        SourceLoadB = locB.LocName,
                         DestinationLoadA = destA,
-                        DestinationLoadB = destB,                        
+                        DestinationLoadB = destB,
                         UnloadCycle = Cycle.Single
                     };
                     if (et.DestinationLoadA == et.DestinationLoadB)
@@ -277,22 +277,31 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                             //This is a double move to the elevator so don't send a single
                             if (caseB.TUIdent == telegramFields.GetFieldValue(TelegramFields.tuIdent)) //LocationB just set the destination
                             {
+                                Log.Write($"{Name} two loads at PS. Load B {caseB.TUIdent} received transport");
                                 UpDateLoadParameters(telegramFields, caseB);
                                 caseB.Destination = telegramFields.GetFieldValue(TelegramFields.destination);
                                 caseB.Source = telegramFields.GetFieldValue(TelegramFields.source);
                                 //MRP 29-01-2019: only wait 10 sec for second transport at PS.
-                                var timer = new Timer(10);
-                                waitForSecondTransportAtPs[caseA] = timer;
-                                timer.UserData = telegramFields;
-                                timer.OnElapsed += SecondCaseTimeout;
-                                timer.Start();
+                                if (!waitForSecondTransportAtPs.ContainsKey(caseA))
+                                {
+                                    var timer = new Timer(10);
+                                    waitForSecondTransportAtPs[caseA] = timer;
+                                    timer.UserData = telegramFields;
+                                    timer.OnElapsed += SecondCaseTimeout;
+                                    timer.Start();
+                                }
+
                                 //MRP 24-10-2018 send load arrived for load A when we got transport telegram for load B
                                 string bodyA = (string)(caseA.UserData);
                                 SendTelegram(bodyA, true); //position A load 
                                 return;
                             }
-                            else if (caseA.TUIdent == telegramFields.GetFieldValue(TelegramFields.tuIdent)) //LocationA Should be the second message so create the elevator task
+                            else if (caseA.TUIdent == telegramFields.GetFieldValue(TelegramFields.tuIdent)) 
+                                //LocationA Should be the second message so create the elevator task
                             {
+                                Log.Write($"{Name} two loads at PS. Load A {caseA.TUIdent} received transport");
+
+
                                 //MRP 29-01-2019: only wait 10 sec for second transport at PS.
                                 //Stop waiting for transport - we got a transport
                                 if (waitForSecondTransportAtPs.TryGetValue(caseA, out var timer))
@@ -303,8 +312,9 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                                     waitForSecondTransportAtPs.Remove(caseA);
                                 }
 
-                                var tasks = ms.elevators.First(x => x.ElevatorName == side + aisle).ElevatorTasks;
-                                if (tasks.Any(t => t.LoadB_ID == caseB.TUIdent))
+                                var elevator = ms.elevators.First(x => x.ElevatorName == side + aisle);
+                                var tasks = elevator.ElevatorTasks;
+                                if (tasks.Any(t => t.LoadB_ID == caseB.TUIdent) || (elevator.CurrentTask != null && elevator.CurrentTask.LoadB_ID == caseB.TUIdent))
                                 {
                                     Log.Write($"{Name}: Transport mission received for second tote at PS but elevator already ordered to pick only the front tote. Transport ignored.");
                                     return;
@@ -379,6 +389,13 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                         }
                         else if (psConv.LocationB.Active)
                         {
+                            if (psConv.LocationB.ActiveLoad != caseLoad)
+                            {
+                                Log.Write($"{Name}: start transport telegram ignored. Load at location B {psConv.LocationB.ActiveLoad.Identification} is not equal to load id in message {caseLoad.TUIdent}!");
+                                return;
+                            }
+
+                            Log.Write($"{Name} single loads at PS. Load B {caseLoad.TUIdent} received transport");
                             SingleLoadAtPS(telegramFields, caseLoad);
                         }
                         else
@@ -459,7 +476,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
         private void SecondCaseTimeout(Timer sender)
         {
             //Don't wait for a second transport at PS any more. Just pick the front load and move this load to the front of PS.
-            sender.OnElapsed -= SecondCaseTimeout;          
+            sender.OnElapsed -= SecondCaseTimeout;
             var telegramFields = sender.UserData as string[];
             string sourceLoc = telegramFields.GetFieldValue(TelegramFields.source);
             string aisle = GetPSDSLocFields(sourceLoc, PSDSRackLocFields.Aisle);
@@ -475,9 +492,18 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
             }
             var caseB = psConv.TransportSection.Route.Loads.Last.Value as IATCCaseLoadType;
             var caseA = psConv.TransportSection.Route.Loads.First.Value as IATCCaseLoadType;
-            Log.Write($"{Name}: 10 second timeout. No transport received for second tote {caseB.TUIdent}. Elevator will pick the front load.");
+            Log.Write($"{Name}: 10 second timeout. No transport received for second tote {caseA.TUIdent}. Elevator will pick the front load.");
             sender.Dispose();
             waitForSecondTransportAtPs.Remove(caseA);
+
+            var elevator = ms.elevators.First(x => x.ElevatorName == side + aisle);
+            var tasks = elevator.ElevatorTasks;
+            if (tasks.Any(t => t.LoadB_ID == caseB.TUIdent) || (elevator.CurrentTask != null && elevator.CurrentTask.LoadB_ID == caseB.TUIdent))
+            {
+                Log.Write($"{Name}: Timeout for second tote at PS but elevator already ordered to pick only the front tote. Timeout ignored.");
+                return;
+            }
+
             SingleLoadAtPS(telegramFields, caseB);
         }
 
@@ -582,30 +608,30 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
             {
                 destination = DCIbinLocToMultiShuttleLoc(tlgDest, out level, ms);
             }
-            else if (tlgDest.LocationType() == LocationTypes.DS )//A move to a drop station
+            else if (tlgDest.LocationType() == LocationTypes.DS)//A move to a drop station
             {
 
                 // takes the form aasyyxz: aa=aisle, s = side, yy = level, x = conv type see enum ConveyorTypes , Z = loc A or B e.g. 01R05OA
                 destination = string.Format("{0}{1}{2}OA", GetPSDSLocFields(tlgDest, PSDSRackLocFields.Aisle),
                                                            GetPSDSLocFields(tlgDest, PSDSRackLocFields.Side),
-                                                           level.ToString().PadLeft(2, '0'));                
+                                                           level.ToString().PadLeft(2, '0'));
             }
-            else if(tlgDest.LocationType() == LocationTypes.RackConv)
+            else if (tlgDest.LocationType() == LocationTypes.RackConv)
             {
                 destination = DCIrackLocToMultiShuttleRackLoc(level, tlgDest);//Create the rack location destination for the shuttle task
             }
 
             st.Destination = destination;
-            st.Level       = level;
-            st.LoadID      = telegramFields.GetFieldValue("tuIdent");
-            st.caseData    = SetUpCaseMissionDataSet(telegramFields);
-            ms.shuttlecars[level].ShuttleTasks.Add(st);            
+            st.Level = level;
+            st.LoadID = telegramFields.GetFieldValue("tuIdent");
+            st.caseData = SetUpCaseMissionDataSet(telegramFields);
+            ms.shuttlecars[level].ShuttleTasks.Add(st);
         }
 
         public static string DCIrackLocToMultiShuttleRackLoc(int level, string dest, string pos = "A")
         {
             // takes the form aasyyxz: aa=aisle, s = side, yy = level, x = conv type see enum ConveyorTypes , Z = loc A or B e.g. 01R05OA
-            return  string.Format("{0}{1}{2}O{3}", GetRackLocFields(dest, PSDSRackLocFields.Aisle),
+            return string.Format("{0}{1}{2}O{3}", GetRackLocFields(dest, PSDSRackLocFields.Aisle),
                                                    GetRackLocFields(dest, PSDSRackLocFields.Side),
                                                    level.ToString().PadLeft(2, '0'),
                                                    pos);
@@ -693,10 +719,10 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
             ATCCaseData cData = new ATCCaseData();
             float length, width, height, weight;
 
-            float.TryParse(telegramFields.GetFieldValue("length"),out length);
-            float.TryParse(telegramFields.GetFieldValue("width"),out width);
-            float.TryParse(telegramFields.GetFieldValue("height"),out height);
-            float.TryParse(telegramFields.GetFieldValue("weight"),out weight);
+            float.TryParse(telegramFields.GetFieldValue("length"), out length);
+            float.TryParse(telegramFields.GetFieldValue("width"), out width);
+            float.TryParse(telegramFields.GetFieldValue("height"), out height);
+            float.TryParse(telegramFields.GetFieldValue("weight"), out weight);
 
             // Only set dimension values if a real value is sent, otherwise maintain the default
             if (length > 0)
@@ -710,17 +736,17 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
 
             cData.colour = LoadColor(telegramFields.GetFieldValue("color"));
 
-            cData.TUIdent         = telegramFields.GetFieldValue("tuIdent");
-            cData.TUType          = telegramFields.GetFieldValue("tuType");
-            cData.mts             = telegramFields.GetFieldValue("mts");
+            cData.TUIdent = telegramFields.GetFieldValue("tuIdent");
+            cData.TUType = telegramFields.GetFieldValue("tuType");
+            cData.mts = telegramFields.GetFieldValue("mts");
             cData.presetStateCode = telegramFields.GetFieldValue("presetStateCode");
-            cData.source          = telegramFields.GetFieldValue("source");
-            cData.destination     = telegramFields.GetFieldValue("destination");
+            cData.source = telegramFields.GetFieldValue("source");
+            cData.destination = telegramFields.GetFieldValue("destination");
 
             return cData;
         }
 
-        private void SingleLoadAtPS(string[] telegramFields,IATCCaseLoadType caseLoad)
+        private void SingleLoadAtPS(string[] telegramFields, IATCCaseLoadType caseLoad)
         {
             // Rack Location for an ElevatorTask takes the form:  aasyyxz: aa=aisle, s = side, yy = level, x = conv type see enum ConveyorTypes , Z = loc A or B e.g. 01R05OA e.g. 01R05OA
             // Source location for a shuttleTask takes the form: sxxxyydd: Side, xxx location, yy = level, dd = depth
@@ -762,7 +788,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                 }
                 else
                 {
-                    dest = string.Format("{0}{1}{2}{3}A", 
+                    dest = string.Format("{0}{1}{2}{3}A",
                                         aisle,
                                         side,
                                         GetPSDSLocFields(destLoc, PSDSRackLocFields.Level),
@@ -786,11 +812,11 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
 
             ElevatorTask et = new ElevatorTask(null, caseLoad.TUIdent)
             {
-                SourceLoadB      = sourceLoadB,
+                SourceLoadB = sourceLoadB,
                 DestinationLoadB = dest,
-                LoadCycle        = Cycle.Single,
-                UnloadCycle      = Cycle.Single,
-                Flow             = TaskType.Infeed
+                LoadCycle = Cycle.Single,
+                UnloadCycle = Cycle.Single,
+                Flow = TaskType.Infeed
             };
 
             ms.elevators.First(x => x.ElevatorName == side + aisle).ElevatorTasks.Add(et);
@@ -805,17 +831,17 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
         private MultiShuttle GetMultishuttleFromAisleNum(string location)
         {
             int aNum;
-            int.TryParse(location.Substring(0,2), out aNum);
+            int.TryParse(location.Substring(0, 2), out aNum);
             if (aNum == 0) return null;
 
             var aisleNum = multishuttles.Where(x => x.AisleNumber == aNum);
-            if(aisleNum.Count() > 1)
+            if (aisleNum.Count() > 1)
             {
                 Log.Write("ERROR: List of multishuttles [Experior.Catalog.Dematic.ATC.Assemblies.Storage.MHEController_Multishuttle.multishuttles] do not have unique aisle numbers.", Color.Red);
                 Log.Write("List of multishuttles accessed in Experior.Catalog.Dematic.ATC.Assemblies.Storage.MHEController_Multishuttle.GetMultishuttleFromAisleNum().", Color.Red);
                 return null;
             }
-            else if(aisleNum.Any())
+            else if (aisleNum.Any())
             {
                 return aisleNum.First();
             }
@@ -840,7 +866,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
             }
             else
             {
-                Experior.Core.Environment.Log.Write("Can't create MHE Control, object is not defined in the 'CreateMHEControl' of the controller",Color.Red);
+                Experior.Core.Environment.Log.Write("Can't create MHE Control, object is not defined in the 'CreateMHEControl' of the controller", Color.Red);
                 return null;
             }
             //......other assemblies should be added here....do this with generics...correction better to do this with reflection...That is BaseController should use reflection
