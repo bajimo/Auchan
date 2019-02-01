@@ -75,6 +75,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
         void theMultishuttle_OnArrivedAtPickStationConvPosA(object sender, PickDropStationArrivalEventArgs e)
         {
             IATCCaseLoadType caseloadA = (IATCCaseLoadType)(e._caseLoad);
+      
             caseloadA.Location = FormatPickDropLocation(e._locationName, ConveyorTypes.Pick); //Update the location
             caseloadA.Destination = caseloadA.Location;
 
@@ -95,6 +96,8 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                     Core.Environment.Log.Write($"{this.theMultishuttle.Name} Error: theMultishuttle_OnArrivedAtPickStationConvPosA LoadA == LoadB!!");
                     Core.Environment.Scene.Pause();
                 }
+
+                mheController_Multishuttle.RemoveIgnoreCase(caseLoadB);
 
                 string bodyB = (string)(caseLoadB.UserData); //Grab the already created message from the load using the load reference 
                 string bodyA = (string)(caseloadA.UserData);

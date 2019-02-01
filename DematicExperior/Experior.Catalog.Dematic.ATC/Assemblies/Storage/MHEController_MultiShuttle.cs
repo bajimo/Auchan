@@ -29,6 +29,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
         public override void Reset()
         {
             waitForSecondTransportAtPs.Clear();
+            ignoreTelegrams.Clear();
             RunningPSTimers.Clear();
             base.Reset();
         }
@@ -74,6 +75,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
             sender.Dispose();
 
             IATCCaseLoadType LoadPosB = (IATCCaseLoadType)(((object[])sender.UserData)[0]);
+            RemoveIgnoreCase(LoadPosB);
             if (LoadPosB.UserData == null) return;
             SendTelegram((string)LoadPosB.UserData, true);
             PickStationLock(LoadPosB);
@@ -219,6 +221,12 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
         }
 
         private Dictionary<IATCCaseLoadType, Timer> waitForSecondTransportAtPs = new Dictionary<IATCCaseLoadType, Timer>();
+        private HashSet<IATCCaseLoadType> ignoreTelegrams = new HashSet<IATCCaseLoadType>();
+
+        public void RemoveIgnoreCase(IATCCaseLoadType caseload)
+        {
+            ignoreTelegrams.Remove(caseload);
+        }
 
         private void StartTransportTelegramReceived(string[] telegramFields)
         {
@@ -260,6 +268,18 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                             IATCCaseLoadType caseB = psConv.LocationB.ActiveLoad as IATCCaseLoadType;
                             //Stop the timer if the load matches any loads that are waiting at the pick station
 
+                            if (ignoreTelegrams.Contains(caseB))
+                            {
+                                Log.Write($"{Name} Ignoring transport recieved at PS. Load B {caseB.TUIdent} received transport");
+                                return;
+                            }
+
+                            if (ignoreTelegrams.Contains(caseA))
+                            {
+                                Log.Write($"{Name} Ignoring transport recieved at PS. Load B {caseA.TUIdent} received transport");
+                                return;
+                            }
+
                             foreach (Timer timer in RunningPSTimers)
                             {
                                 IATCCaseLoadType LoadPosB = (IATCCaseLoadType)(((object[])timer.UserData)[0]);
@@ -300,7 +320,6 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                                 //LocationA Should be the second message so create the elevator task
                             {
                                 Log.Write($"{Name} two loads at PS. Load A {caseA.TUIdent} received transport");
-
 
                                 //MRP 29-01-2019: only wait 10 sec for second transport at PS.
                                 //Stop waiting for transport - we got a transport
@@ -388,7 +407,13 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                             }
                         }
                         else if (psConv.LocationB.Active)
-                        {
+                        {            
+                            if (ignoreTelegrams.Contains(caseLoad))
+                            {
+                                Log.Write($"{Name} Ignoring transport recieved at PS. Load B {caseLoad.TUIdent} received transport");
+                                return;
+                            }
+
                             if (psConv.LocationB.ActiveLoad != caseLoad)
                             {
                                 Log.Write($"{Name}: start transport telegram ignored. Load at location B {psConv.LocationB.ActiveLoad.Identification} is not equal to load id in message {caseLoad.TUIdent}!");
@@ -494,6 +519,13 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
             var caseA = psConv.TransportSection.Route.Loads.First.Value as IATCCaseLoadType;
             Log.Write($"{Name}: 10 second timeout. No transport received for second tote {caseA.TUIdent}. Elevator will pick the front load.");
             sender.Dispose();
+
+            if (waitForSecondTransportAtPs[caseA] != sender)
+            {
+                Log.Write($"{Name}: 10 second timeout failed. PS load A is not the one that started the timer! Load at PS A {caseA.TUIdent} ");
+                return;
+            }
+
             waitForSecondTransportAtPs.Remove(caseA);
 
             var elevator = ms.elevators.First(x => x.ElevatorName == side + aisle);
@@ -504,6 +536,7 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                 return;
             }
 
+            ignoreTelegrams.Add(caseA);
             SingleLoadAtPS(telegramFields, caseB);
         }
 
