@@ -1199,7 +1199,7 @@ namespace Experior.Controller.AuchanCarvin
                 IATCLoadType atcLoad = e._Load as IATCLoadType;
                 atcLoad.Location = atcLoad.Destination = "PCPA01SP00";
                 plc02.SendTransportFinishedTelegram(atcLoad);
-                plc02.SendLocationLeftTelegram(atcLoad);
+                //plc02.SendLocationLeftTelegram(atcLoad);
                 e._Load.Dispose();
                 pecWorkAround[name] = true;
             }
