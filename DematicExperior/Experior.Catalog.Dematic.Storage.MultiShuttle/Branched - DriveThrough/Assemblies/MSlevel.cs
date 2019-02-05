@@ -52,6 +52,13 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
         /// </summary>
         private void Vehicle_OnLoadArrived(object sender, ApEnterEventArgs e)
         {
+            if (e._load.Identification != currentTask.LoadID)
+            {
+                Core.Environment.Log.Write($"{ParentMS.Name} error {e._load.Identification} arrived on shuttle but expected {currentTask.LoadID}!");
+                Core.Environment.Scene.Pause();
+                return;
+            }
+
             foreach (var elevator in ParentMS.elevators)
             {
                 elevator.SetNewElevatorTask();
@@ -92,11 +99,8 @@ namespace Experior.Catalog.Dematic.Storage.MultiShuttle.Assemblies
                 else if (value == null)
                 {
                     currentTask = null;
-                    ShuttleTask newTask = SetNewShuttleTask();
-                    if (newTask == null)
-                    {
-                        Vehicle.TaskDisplay = "";
-                    }
+                    Vehicle.TaskDisplay = "";
+                    SetNewShuttleTask();
                 }
             }
         }
