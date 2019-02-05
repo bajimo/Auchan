@@ -57,7 +57,6 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
         /// This method is called after TUDR messages are sent at the pick stations, a timer is started, 
         /// if the TUMI is not received after 30s the messages are resent.  
         /// </summary>
-        /// <param name="LoadPosA"></param>
         /// <param name="LoadPosB"></param>
         public void PickStationLock(IATCCaseLoadType LoadPosB)
         {
@@ -77,6 +76,16 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
             IATCCaseLoadType LoadPosB = (IATCCaseLoadType)(((object[])sender.UserData)[0]);
             RemoveIgnoreCase(LoadPosB);
             if (LoadPosB.UserData == null) return;
+
+            var psConv = LoadPosB.Route.Parent.Parent as PickStationConveyor;
+            var elevator = psConv.Elevator;
+            var tasks = elevator.ElevatorTasks;
+            if (tasks.Any(t => t.LoadB_ID == LoadPosB.TUIdent) || (elevator.CurrentTask != null && elevator.CurrentTask.LoadB_ID == LoadPosB.TUIdent))
+            {
+                Log.Write($"{Name}: PickStationResendTimer_OnElapsed for tote at PS but elevator already ordered to pick only the front tote. Timeout ignored.");
+                return;
+            }
+
             SendTelegram((string)LoadPosB.UserData, true);
             PickStationLock(LoadPosB);
         }
@@ -243,8 +252,6 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
 
                 if (caseLoad != null)
                 {
-                    UpDateLoadParameters(telegramFields, caseLoad);
-
                     if (telegramFields.GetFieldValue(TelegramFields.source).LocationType() == LocationTypes.PS)
                     {
                         //Check how many loads are at the pickstation, first i need to find the pick station
@@ -403,14 +410,14 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                             }
                             else
                             {
-                                Log.Write(string.Format("Error {0}: None of the tuIdents match any of the loads at the PS on StartTransportTelegram"), Color.Orange);
+                                Log.Write(string.Format("Error: None of the tuIdents match any of the loads at the PS on StartTransportTelegram"), Color.Orange);
                             }
                         }
                         else if (psConv.LocationB.Active)
                         {            
                             if (ignoreTelegrams.Contains(caseLoad))
                             {
-                                Log.Write($"{Name} Ignoring transport recieved at PS. Load B {caseLoad.TUIdent} received transport");
+                                Log.Write($"{Name} Ignoring transport received at PS. Load B {caseLoad.TUIdent} received transport");
                                 return;
                             }
 
@@ -420,7 +427,15 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                                 return;
                             }
 
+                            var caseB = psConv.LocationB.ActiveLoad as IATCCaseLoadType;
+                            if (caseB != caseLoad)
+                            {
+                                Log.Write($"{Name} Ignoring transport received at PS. Load at B {caseB.TUIdent} is not equal to telegram ID: {caseLoad.TUIdent}");
+                                return;
+                            }
+
                             Log.Write($"{Name} single loads at PS. Load B {caseLoad.TUIdent} received transport");
+                            UpDateLoadParameters(telegramFields, caseLoad);
                             SingleLoadAtPS(telegramFields, caseLoad);
                         }
                         else
@@ -430,11 +445,13 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
                     }
                     else if (telegramFields.GetFieldValue(TelegramFields.source).LocationType() == LocationTypes.RackConv && telegramFields.GetFieldValue(TelegramFields.source).RackConvType() == RackConvTypes.Out)
                     {
+                        UpDateLoadParameters(telegramFields, caseLoad);
                         LoadAtRackConv(telegramFields, caseLoad);
                     }
                     else if (telegramFields.GetFieldValue(TelegramFields.source).LocationType() == LocationTypes.RackConv && telegramFields.GetFieldValue(TelegramFields.source).RackConvType() == RackConvTypes.In &&
                             caseLoad.Location == telegramFields.GetFieldValue(TelegramFields.source)) //Mission for load at Infeed Rack conveyor
                     {
+                        UpDateLoadParameters(telegramFields, caseLoad);
                         ShuttleTask st = new ShuttleTask();
                         string destination = caseLoad.Destination;
                         string source = telegramFields.GetFieldValue(TelegramFields.source);
@@ -500,33 +517,64 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
 
         private void SecondCaseTimeout(Timer sender)
         {
-            //Don't wait for a second transport at PS any more. Just pick the front load and move this load to the front of PS.
+            //Don't wait for a second transport at PS any more. Just pick the front load B and move load A to the front of PS.
             sender.OnElapsed -= SecondCaseTimeout;
             var telegramFields = sender.UserData as string[];
-            string sourceLoc = telegramFields.GetFieldValue(TelegramFields.source);
-            string aisle = GetPSDSLocFields(sourceLoc, PSDSRackLocFields.Aisle);
-            string side = GetPSDSLocFields(sourceLoc, PSDSRackLocFields.Side);
-            string psLevel = GetPSDSLocFields(sourceLoc, PSDSRackLocFields.Level);
-            string psA = string.Format("{0}{1}{2}{3}A", aisle, side, psLevel, GetPSDSLocFields(sourceLoc, PSDSRackLocFields.ConvType));
-            MultiShuttle ms = GetMultishuttleFromAisleNum(psA);
-            PickStationConveyor psConv = ms.PickStationConveyors.Find(x => x.Name == string.Format("{0}{1}PS{2}", aisle, side, psLevel));
+            var sourceLoc = telegramFields.GetFieldValue(TelegramFields.source);
+            var aisle = GetPSDSLocFields(sourceLoc, PSDSRackLocFields.Aisle);
+            var side = GetPSDSLocFields(sourceLoc, PSDSRackLocFields.Side);
+            var psLevel = GetPSDSLocFields(sourceLoc, PSDSRackLocFields.Level);
+            var psA = string.Format("{0}{1}{2}{3}A", aisle, side, psLevel, GetPSDSLocFields(sourceLoc, PSDSRackLocFields.ConvType));
+            var ms = GetMultishuttleFromAisleNum(psA);
+            var psConv = ms.PickStationConveyors.Find(x => x.Name == string.Format("{0}{1}PS{2}", aisle, side, psLevel));
+            //Get the case load from the telegram which was received 10 sec ago.
+            var caseLoad = (IATCCaseLoadType)Case_Load.GetCaseFromIdentification(telegramFields.GetFieldValue(TelegramFields.tuIdent));
+
+            if (caseLoad == null)
+            {
+                Log.Write($"{Name}: 10 second timeout failed. Could not find load B that triggered 10 sec timeout!");
+                return;
+            }
+
             if (psConv.TransportSection.Route.Loads.Count != 2)
             {
                 Log.Write($"{Name}: 10 second timeout failed. PS does not contain 2 totes!");
                 return;
             }
-            var caseB = psConv.TransportSection.Route.Loads.Last.Value as IATCCaseLoadType;
-            var caseA = psConv.TransportSection.Route.Loads.First.Value as IATCCaseLoadType;
-            Log.Write($"{Name}: 10 second timeout. No transport received for second tote {caseA.TUIdent}. Elevator will pick the front load.");
-            sender.Dispose();
-
-            if (waitForSecondTransportAtPs[caseA] != sender)
+           
+            if (!psConv.LocationA.Active)
             {
-                Log.Write($"{Name}: 10 second timeout failed. PS load A is not the one that started the timer! Load at PS A {caseA.TUIdent} ");
+                Log.Write($"{Name}: 10 second timeout failed. No load at PS A.");
                 return;
             }
 
-            waitForSecondTransportAtPs.Remove(caseA);
+            if (!psConv.LocationB.Active)
+            {
+                Log.Write($"{Name}: 10 second timeout failed. No load at PS B.");
+                return;
+            }
+
+            var caseB = psConv.LocationB.ActiveLoad as IATCCaseLoadType;
+            var caseA = psConv.LocationA.ActiveLoad as IATCCaseLoadType;
+     
+            if (caseLoad != caseB)
+            {
+                //Front load and "telegram load" does not match!
+                Log.Write($"{Name}: 10 second timeout failed. Load at PS B {caseB.TUIdent} is not equal to load in timeout telegram {caseLoad.TUIdent} ");
+                return;
+            }
+
+            if (!waitForSecondTransportAtPs.ContainsKey(caseA))
+            {
+                Log.Write($"{Name}: 10 second timeout failed. PS load A is not in the dictionary! Load at PS A {caseA.TUIdent}. Load at PS B {caseB.TUIdent} ");
+                return;
+            }
+
+            if (waitForSecondTransportAtPs[caseA] != sender)
+            {
+                Log.Write($"{Name}: 10 second timeout failed. PS load A is not the one that started the timer! Load at PS A {caseA.TUIdent}. Load at PS B {caseB.TUIdent} ");
+                return;
+            }
 
             var elevator = ms.elevators.First(x => x.ElevatorName == side + aisle);
             var tasks = elevator.ElevatorTasks;
@@ -534,6 +582,25 @@ namespace Experior.Catalog.Dematic.ATC.Assemblies.Storage
             {
                 Log.Write($"{Name}: Timeout for second tote at PS but elevator already ordered to pick only the front tote. Timeout ignored.");
                 return;
+            }
+
+            Log.Write($"{Name}: 10 second timeout. No transport received for second tote {caseA.TUIdent}. Elevator will pick the front load {caseB.TUIdent}.");
+            sender.Dispose();
+            waitForSecondTransportAtPs.Remove(caseA);
+
+            //Remove any PS timer (There shouldn't be any as we got a transport mission for case B!)
+            foreach (Timer timer in RunningPSTimers)
+            {
+                IATCCaseLoadType LoadPosB = (IATCCaseLoadType)(((object[])timer.UserData)[0]);
+
+                if (LoadPosB == caseB)
+                {
+                    RunningPSTimers.Remove(timer);
+                    timer.Stop();
+                    timer.OnElapsed -= PickStationResendTimer_OnElapsed;
+                    timer.Dispose();
+                    break;
+                }
             }
 
             ignoreTelegrams.Add(caseA);
